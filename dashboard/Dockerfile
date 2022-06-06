@@ -1,0 +1,1 @@
+FROM gosuper/localstack-s3-ui

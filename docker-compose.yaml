@@ -1,0 +1,55 @@
+version: "3.5"
+
+services:
+
+  spark:
+    container_name: spark
+    hostname: spark
+    image: pyspark-playground:spark
+    build:
+      context: ./spark
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    working_dir: /root
+    volumes:
+      - ./spark/.ivy2:/root/.ivy2
+      #- ./spark/.jupyter:/root/.jupyter
+      - ./spark/workspace:/root/workspace
+
+  localstack:
+    container_name: localstack
+    hostname: localstack
+    image: pyspark-playground:localstack
+    build:
+      context: localstack
+      dockerfile: Dockerfile
+    ports:
+      - "4566:4566"
+    environment:
+      - ACCESS_KEY_ID=test
+      - SECRET_ACCESS_KEY=test
+      - SESSION_TOKEN=test
+      - DEFAULT_REGION=ap-northeast-2
+      - DEFAULT_OUTPUT=json
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./localstack/data:/opt/code/localstack/data
+      #- ./localstack/init:/docker-entrypoint-initaws.d
+
+  dashboard:
+    container_name: dashboard
+    hostname: dashboard
+    image: pyspark-playground:dashboard
+    build:
+      context: dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      - API_REQ_FILE_PATH=/opt/code/localstack/data/recorded_api_calls.json
+      - PORT=9000
+    volumes:
+      - ./localstack/data:/opt/code/localstack/data
+    depends_on:
+      - localstack
